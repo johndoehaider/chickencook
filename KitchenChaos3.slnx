@@ -1,5 +1,3 @@
 ﻿<Solution>
-  <Project Path="CodeMonkeyFreeEditor.csproj" />
-  <Project Path="CodeMonkeyFree.csproj" />
   <Project Path="Assembly-CSharp.csproj" />
 </Solution>
