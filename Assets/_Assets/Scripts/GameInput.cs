@@ -1,29 +1,41 @@
-using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting.InputSystem;
+using System;
 using UnityEngine;
-using UnityEngine.EventSystems;
+using UnityEngine.InputSystem;
 
 public class GameInput : MonoBehaviour
 {
-                                                             //private PlayerInputActions playerInputActions;
-    private PlayerInputActions InputSystem_Actions;
+    public event EventHandler OnJumpAction;
+
+    private InputSystem_Actions inputSystemActions;
+
     private void Awake()
     {
-                                                             //playerInputActions = new PlayerInputActions();
-                                                             //playerInputActions.Enable();
-
-        InputSystem_Actions = new PlayerInputActions();
-        InputSystem_Actions.Enable();
-
+        inputSystemActions = new InputSystem_Actions();
+        inputSystemActions.Player.Jump.performed += Jump_performed;
+        inputSystemActions.Enable();
     }
-        public Vector2 GetMovementVectorNormalized()
+
+    private void OnDestroy()
     {
-                                                             //Vector2 inputVector = inputVector = playerInputActions.Player.Move.ReadValue<Vector2>();
-        Vector2 inputVector = inputVector = InputSystem_Actions.Player.Move.ReadValue<Vector2>();
+        inputSystemActions.Player.Jump.performed -= Jump_performed;
+        inputSystemActions.Dispose();
+    }
+
+    private void Jump_performed(InputAction.CallbackContext _)
+    {
+        OnJumpAction?.Invoke(this, EventArgs.Empty);
+    }
+
+    public bool isSprintPressed()
+    {
+        return inputSystemActions.Player.Sprint.ReadValue<float>() > 0f;
+    }
+
+    public Vector2 GetMovementVectorNormalized()
+    {
+        Vector2 inputVector = inputSystemActions.Player.Move.ReadValue<Vector2>();
         inputVector = inputVector.normalized;
         return inputVector;
     }
-
 }
 
