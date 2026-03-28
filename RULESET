@@ -1,0 +1,149 @@
+RULESET
+
+How To Add a New Mechanic
+
+1. Add input first in the Input System asset.
+- Create the action (button/value) and bind the key/button.
+- Let Unity regenerate the input action C# wrapper.
+
+2. Decide if the mechanic is hold/state-based or event/tap-based.
+- Hold/state-based: poll it every frame.
+- Event/tap-based: trigger once and start behavior from a handler.
+
+3. In GameInput, expose input in a clean way.
+- Hold/state: add a method that returns current input state/value.
+- Event/tap: add a public event, subscribe to input action callbacks in Awake, unsubscribe and clean up in OnDestroy, invoke event in callback.
+
+4. In Player, add required mechanic data at the top.
+- Add fields for tunables (usually SerializeField): speeds, durations, cooldowns.
+- Add runtime state fields (private): flags, timers, cached directions, current state.
+
+5. Wire input consumption in Player.
+- Hold/state: read GameInput method in Update.
+- Event/tap: subscribe in OnEnable, unsubscribe in OnDisable, and start mechanic in handler.
+
+6. Split logic by responsibility.
+- Handler: starts one-shot actions (set flags/timers/snapshots).
+- Update: runs frame-by-frame logic (timers, cooldowns, ongoing movement/state updates).
+
+7. Use one movement pipeline per frame.
+- Compute horizontal/vertical velocity first.
+- Choose mechanic branch (walk/sprint/dash/etc.) to set velocity.
+- Apply movement once (avoid accidental double movement in one frame unless intentional).
+
+8. Keep architecture clean.
+- GameInput translates raw input only.
+- Player owns gameplay behavior and state.
+
+9. Test in checkpoints.
+- Verify input fires correctly.
+- Verify start/stop conditions.
+- Verify cooldowns/timers.
+- Verify interactions with existing mechanics (jump, sprint, animation).
+
+10. Polish after behavior is correct.
+- Hook animator parameters/triggers.
+- Tune values in Inspector.
+- Add UI/VFX/SFX only after core logic is stable.
+
+How To Animate
+
+1. Define the animation states before touching code.
+- List exact states needed (for example: Idle, Walk, Sprint, JumpStart, JumpLoop, JumpLand, Dash).
+- Decide what should transition between each state.
+
+2. Pick the correct parameter type for each behavior.
+- Bool: on/off state (IsWalking, IsSprinting, IsJumping).
+- Trigger: one-shot action (Attack, DashStart, JumpStart if needed).
+- Float: blended values (Speed, VerticalVelocity).
+
+3. Name Animator parameters clearly and keep names consistent.
+- Use clear names and exact casing.
+- Match parameter names in Animator Controller and code exactly.
+
+4. Create transitions intentionally.
+- Add conditions for each transition.
+- Use multiple conditions when needed (example: IsWalking=true and IsSprinting=true).
+- Keep logic readable: Idle<->Walk, Walk<->Sprint, AnyState->one-shot states only when appropriate.
+
+5. Configure transition timing to avoid laggy animation response.
+- Turn off Has Exit Time for responsive movement transitions.
+- Reduce Transition Duration for snappier state changes.
+- Keep longer blends only where visual smoothness is needed.
+
+6. Drive animation from gameplay state in code.
+- Update Animator parameters every frame in PlayerAnimator.
+- Keep gameplay state in Player (isWalking, isSprinting, isJumping, isDashing).
+- Do not put gameplay logic inside PlayerAnimator.
+
+7. Add one animation feature at a time.
+- Wire one parameter and one transition path.
+- Test it in Play mode.
+- Then add the next state/transition.
+
+8. Debug using the Animator window while game is running.
+- Watch active state, transitions, and parameter values live.
+- If animation does not play: check parameter name, condition logic, Has Exit Time, and transition duration.
+
+9. Keep movement and animation responsibilities separate.
+- Movement code decides state.
+- Animator reflects that state.
+- Avoid hardcoding animation state names in multiple scripts; centralize parameter constants when possible.
+
+10. Polish after core transitions are correct.
+- Add landing/dash/attack layers or upper-body masks later.
+- Add blend trees for smoother speed-based movement.
+- Add VFX/SFX sync only after state logic is stable.
+
+Animation Code Details
+
+1. Follow a two-script pattern.
+- Player owns gameplay truth (walking, sprinting, jumping, dashing).
+- PlayerAnimator only reads that truth and writes Animator parameters.
+
+2. In Player, store animation-driving state as private fields.
+- Example fields: isWalking, isSprinting, isJumping, isDashing.
+- Update those fields in Update after gameplay logic is computed.
+- Expose read-only public methods for each state.
+
+3. In Player, compute state once per frame from real movement/input.
+- isWalking should come from movement direction not being zero.
+- isSprinting should come from sprint rules (grounded/input/lock rules).
+- isJumping should come from grounded state (or vertical velocity rules if needed).
+- isDashing should come from dash timers/state machine.
+
+4. In PlayerAnimator, cache Animator in Awake and set parameters in Update.
+- Read values from Player getters every frame.
+- Set bool/float/trigger parameters using Animator methods.
+
+5. Keep parameter names centralized as constants.
+- Add string constants in PlayerAnimator for each parameter name.
+- This avoids typo bugs from repeated string literals.
+
+6. Suggested code shape for Player getters.
+- public bool IsWalking() { return isWalking; }
+- public bool IsSprinting() { return isSprinting; }
+- public bool IsJumping() { return isJumping; }
+- public bool IsDashing() { return isDashing; }
+
+7. Suggested code shape for PlayerAnimator parameter writes.
+- animator.SetBool(IS_WALKING, player.IsWalking());
+- animator.SetBool(IS_SPRINTING, player.IsSprinting());
+- animator.SetBool(IS_JUMPING, player.IsJumping());
+- animator.SetBool(IS_DASHING, player.IsDashing());
+
+8. For one-shot animations, prefer Trigger parameters.
+- Use trigger when animation should fire once (attack, dash start, hit react).
+- Set trigger in response to gameplay event start, not every frame.
+- Do not repeatedly set triggers in Update.
+
+9. For continuous blends, prefer Float parameters.
+- Use speed magnitude for blend trees (Idle/Walk/Run).
+- Smooth values when needed to reduce jitter.
+- Example source value: movement vector magnitude or current horizontal speed.
+
+10. Common code mistakes to avoid.
+- Setting animation states directly from raw input instead of gameplay state.
+- Using mismatched parameter names/casing between Animator and code.
+- Forgetting to update a state field, causing Animator bool to stay false forever.
+- Mixing gameplay decisions into PlayerAnimator.

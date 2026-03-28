@@ -4,18 +4,26 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
 
+    [SerializeField] private GameInput gameInput;
     [SerializeField] private float baseSpeed = 7f;
     [SerializeField] private float sprintMultiplier = 2f;
-    private bool wasSprintingBeforeJump = false;
     [SerializeField] private float gravity = 25f;
     [SerializeField] private float jumpHeight = 2.2f;
-    [SerializeField] private GameInput gameInput;
+    [SerializeField] private float dashDistance = 4f;
+    [SerializeField] private float dashCooldown = 10f;
+    [SerializeField] private float dashDuration = 0.2f;
 
     private CharacterController characterController;
     private float verticalVelocity;
     private bool isWalking;
     private bool isSprinting;
     private bool isJumping;
+    private bool wasSprintingBeforeJump = false;
+    private bool isDashing = false;
+    private float dashTimeRemaining;
+    private float dashCooldownRemaining;
+    private Vector3 dashDirection;
+    private Vector3 lastMoveDirection;
 
     private void Awake()
     {
@@ -25,11 +33,13 @@ public class Player : MonoBehaviour
     private void OnEnable()
     {
         gameInput.OnJumpAction += GameInput_OnJumpAction;
+        gameInput.OnDashAction += GameInput_OnDashAction;
     }
 
     private void OnDisable()
     {
         gameInput.OnJumpAction -= GameInput_OnJumpAction;
+        gameInput.OnDashAction -= GameInput_OnDashAction;
     }
 
     private void Update()
@@ -48,7 +58,17 @@ public class Player : MonoBehaviour
         Vector2 inputVector = gameInput.GetMovementVectorNormalized();
 
         Vector3 moveDir = new Vector3(inputVector.x, 0f, inputVector.y);
-        Vector3 horizontalVelocity = moveDir * currentSpeed;
+        
+        Vector3 horizontalVelocity;
+
+        if (isDashing)
+        {
+            horizontalVelocity = dashDirection * dashDistance / dashDuration;
+        }
+        else
+        {
+            horizontalVelocity = moveDir * currentSpeed;
+        }
 
         if (characterController.isGrounded && verticalVelocity < 0f)
         {
@@ -67,6 +87,24 @@ public class Player : MonoBehaviour
         {
             float rotateSpeed = 10f;
             transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
+            lastMoveDirection = moveDir;  //used for dash direction
+        }
+
+        if (isDashing)
+        {
+            if (dashTimeRemaining > 0f)
+            {
+                dashTimeRemaining -= Time.deltaTime;
+            }
+            else
+            {
+                isDashing = false;
+            }
+        }
+
+        if (dashCooldownRemaining > 0f)
+        {
+            dashCooldownRemaining -= Time.deltaTime;
         }
 
     }
@@ -80,6 +118,18 @@ public class Player : MonoBehaviour
 
         verticalVelocity = Mathf.Sqrt(jumpHeight * gravity * 2f);
     }
+
+    private void GameInput_OnDashAction(object sender, System.EventArgs e)
+    {
+       if (dashCooldownRemaining <= 0f && isDashing == false && lastMoveDirection != Vector3.zero)
+       {
+           isDashing = true;
+           dashTimeRemaining = dashDuration;
+           dashCooldownRemaining = dashCooldown;
+           dashDirection = lastMoveDirection.normalized;
+       }
+    }
+
 
     public bool IsWalking()
     {

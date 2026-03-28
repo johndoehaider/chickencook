@@ -5,6 +5,7 @@ using UnityEngine.InputSystem;
 public class GameInput : MonoBehaviour
 {
     public event EventHandler OnJumpAction;
+    public event EventHandler OnDashAction;
 
     private InputSystem_Actions inputSystemActions;
 
@@ -12,18 +13,25 @@ public class GameInput : MonoBehaviour
     {
         inputSystemActions = new InputSystem_Actions();
         inputSystemActions.Player.Jump.performed += Jump_performed;
+        inputSystemActions.Player.Dash.performed += Dash_performed;
         inputSystemActions.Enable();
     }
 
     private void OnDestroy()
     {
         inputSystemActions.Player.Jump.performed -= Jump_performed;
+        inputSystemActions.Player.Dash.performed -= Dash_performed;
         inputSystemActions.Dispose();
     }
 
     private void Jump_performed(InputAction.CallbackContext _)
     {
         OnJumpAction?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void Dash_performed(InputAction.CallbackContext _)
+    {
+        OnDashAction?.Invoke(this, EventArgs.Empty);
     }
 
     public bool isSprintPressed()
