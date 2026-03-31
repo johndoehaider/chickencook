@@ -2,6 +2,8 @@ using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
+// Handles player input using the new Unity Input System, tells nobody anything, just raises events for other systems to respond to
+
 public class GameInput : MonoBehaviour
 {
     public event EventHandler OnJumpAction;
@@ -10,6 +12,7 @@ public class GameInput : MonoBehaviour
 
 
     private InputSystem_Actions inputSystemActions;
+    internal static readonly object Instance;
 
     private void Awake()
     {
@@ -42,7 +45,6 @@ public class GameInput : MonoBehaviour
     {
         OnInteractAction?.Invoke(this, EventArgs.Empty);
     }
-
 
     public bool isSprintPressed()
     {

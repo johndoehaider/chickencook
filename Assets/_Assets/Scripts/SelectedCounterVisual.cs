@@ -1,6 +1,8 @@
 using Unity.VisualScripting;
 using UnityEngine;
 
+// Shows a visual indicator on the counter that is currently selected by the player
+
 public class SelectedCounterVisual : MonoBehaviour
 {
 

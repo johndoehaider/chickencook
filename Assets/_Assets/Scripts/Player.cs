@@ -1,8 +1,11 @@
 using System;
 using UnityEngine;
 
+// Owns the gameplay state and decides what the player can do and how the player moves and interacts with the world
+
 [RequireComponent(typeof(CharacterController))]
-public class Player : MonoBehaviour
+
+public class Player : MonoBehaviour, IKitchenObjectParent
 {
 
 
@@ -24,6 +27,7 @@ public class Player : MonoBehaviour
     [SerializeField] private float dashCooldown = 10f;
     [SerializeField] private float dashDuration = 0.2f;
     [SerializeField] private LayerMask countersLayerMask;
+    [SerializeField] private Transform kitchenObjectHoldPoint;
 
     private CharacterController characterController;
     private float verticalVelocity;
@@ -37,6 +41,8 @@ public class Player : MonoBehaviour
     private Vector3 dashDirection;
     private Vector3 lastMoveDirection;
     private ClearCounter selectedCounter;
+
+    private KitchenObject kitchenObject;
 
     private void Start()
     {
@@ -99,7 +105,7 @@ public class Player : MonoBehaviour
     {
         if (selectedCounter != null)
         {
-            selectedCounter.Interact();
+            selectedCounter.Interact(this);
         }
     }
 
@@ -220,5 +226,29 @@ public class Player : MonoBehaviour
         OnSelectedCounterChanged?.Invoke(this, new OnSelectedCounterChangedEventArgs { selectedCounter = selectedCounter });
     }
 
+    public Transform GetJKitchenObjectFollowTransform()
+    {
+        return kitchenObjectHoldPoint;
+    }
+
+    public void SetKitchenObject(KitchenObject kitchenObject)
+    {
+        this.kitchenObject = kitchenObject;
+    }
+    
+    public KitchenObject GetKitchenObject()
+    {
+        return kitchenObject;
+    }
+
+    public void ClearKitchenObject()
+    {
+        kitchenObject = null;
+    }
+
+    public bool HasKitchenObject()
+    {
+        return kitchenObject != null;
+    }
 }
 
