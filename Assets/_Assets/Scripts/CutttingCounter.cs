@@ -1,12 +1,10 @@
-using System;
 using Unity.VisualScripting;
 using UnityEngine;
 
-
-public class ClearCounter : BaseCounter
+public class CutttingCounter : BaseCounter
 {
 
-    [SerializeField] private KitchenObjectSO kitchenObjectSO;
+    [SerializeField] private KitchenObjectSO cutKitchenObjectSO;
 
     public override void Interact(Player player)
     {
@@ -30,6 +28,7 @@ public class ClearCounter : BaseCounter
             if (player.HasKitchenObject())
             {
                 // both the counter and the player have a kitchen object
+                // handle interaction between the two kitchen objects here
             }
             else
             {
@@ -38,6 +37,20 @@ public class ClearCounter : BaseCounter
             }
 
         }
+    }
+
+    public override void InteractAlternate(Player player)
+    {
+        if (HasKitchenObject())
+        {
+            // handle cutting the kitchen object here
+            GetKitchenObject().DestroySelf();
+            
+            KitchenObject.SpawnKitchenObject(cutKitchenObjectSO, this);
+        }
+
 
     }
+ 
+
 }

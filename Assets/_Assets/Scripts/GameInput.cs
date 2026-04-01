@@ -9,6 +9,7 @@ public class GameInput : MonoBehaviour
     public event EventHandler OnJumpAction;
     public event EventHandler OnDashAction;
     public event EventHandler OnInteractAction;
+    public event EventHandler OnInteractAlternateAction;
 
 
     private InputSystem_Actions inputSystemActions;
@@ -20,6 +21,7 @@ public class GameInput : MonoBehaviour
         inputSystemActions.Player.Jump.performed += Jump_performed;
         inputSystemActions.Player.Dash.performed += Dash_performed;
         inputSystemActions.Player.Interact.performed += Interact_performed;
+        inputSystemActions.Player.InteractAlternate.performed += InteractAlternate_performed;
         inputSystemActions.Enable();
     }
 
@@ -28,6 +30,7 @@ public class GameInput : MonoBehaviour
         inputSystemActions.Player.Jump.performed -= Jump_performed;
         inputSystemActions.Player.Dash.performed -= Dash_performed;
         inputSystemActions.Player.Interact.performed -= Interact_performed;
+        inputSystemActions.Player.InteractAlternate.performed -= InteractAlternate_performed;
         inputSystemActions.Dispose();
     }
 
@@ -44,6 +47,11 @@ public class GameInput : MonoBehaviour
     private void Interact_performed(InputAction.CallbackContext _)
     {
         OnInteractAction?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void InteractAlternate_performed(InputAction.CallbackContext _)
+    {
+        OnInteractAlternateAction?.Invoke(this, EventArgs.Empty);
     }
 
     public bool isSprintPressed()

@@ -14,7 +14,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     public event EventHandler<OnSelectedCounterChangedEventArgs> OnSelectedCounterChanged;
     public class OnSelectedCounterChangedEventArgs : EventArgs
     {
-        public ClearCounter selectedCounter;
+        public BaseCounter selectedCounter;
     }
     
 
@@ -40,7 +40,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent
     private float dashCooldownRemaining;
     private Vector3 dashDirection;
     private Vector3 lastMoveDirection;
-    private ClearCounter selectedCounter;
+    private BaseCounter selectedCounter;
 
     private KitchenObject kitchenObject;
 
@@ -65,6 +65,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         gameInput.OnJumpAction += GameInput_OnJumpAction;
         gameInput.OnDashAction += GameInput_OnDashAction;
         gameInput.OnInteractAction += GameInput_OnInteractAction;
+        gameInput.OnInteractAlternateAction += GameInput_OnInteractAlternateAction;
     }
 
     private void OnDisable()
@@ -72,6 +73,7 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         gameInput.OnJumpAction -= GameInput_OnJumpAction;
         gameInput.OnDashAction -= GameInput_OnDashAction;
         gameInput.OnInteractAction -= GameInput_OnInteractAction;
+        gameInput.OnInteractAlternateAction -= GameInput_OnInteractAlternateAction;
     }
 
     private void Update()
@@ -109,6 +111,14 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         }
     }
 
+    private void GameInput_OnInteractAlternateAction(object sender, System.EventArgs e)
+    {
+        if (selectedCounter != null)
+        {
+            selectedCounter.InteractAlternate(this);
+        }
+    }
+
     public bool IsWalking()
     {
         return isWalking;
@@ -134,12 +144,12 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         float interactDistance = 2f;
         if (Physics.Raycast(transform.position, lastMoveDirection, out RaycastHit raycastHit, interactDistance, countersLayerMask))
         {
-            if (raycastHit.transform.TryGetComponent(out ClearCounter clearCounter))
+            if (raycastHit.transform.TryGetComponent(out BaseCounter baseCounter))
             {
-                // Has ClearCounter
-                if (clearCounter != selectedCounter)
+                // Has BaseCounter
+                if (baseCounter != selectedCounter)
                 {
-                    SetSelectedCounter(clearCounter);
+                    SetSelectedCounter(baseCounter);
                 }
             }
             else
@@ -151,8 +161,6 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         {
             SetSelectedCounter(null);
         }
-
-        Debug.Log(selectedCounter);
     }
 
     private void HandleMovement()
@@ -197,11 +205,21 @@ public class Player : MonoBehaviour, IKitchenObjectParent
         isWalking = moveDir != Vector3.zero;
 
         if (moveDir != Vector3.zero)
-        {
-            float rotateSpeed = 10f;
-            transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
-            lastMoveDirection = moveDir;  //used for dash direction
-        }
+{
+    float rotateSpeed = 10f;
+
+    if (Physics.Raycast(transform.position, moveDir, out RaycastHit hit, 1f))
+    {
+        Vector3 directionToHit = (hit.point - transform.position).normalized;
+        transform.forward = Vector3.Slerp(transform.forward, directionToHit, Time.deltaTime * rotateSpeed);
+    }
+    else
+    {
+        transform.forward = Vector3.Slerp(transform.forward, moveDir, Time.deltaTime * rotateSpeed);
+    }
+
+    lastMoveDirection = moveDir;  //used for dash direction
+}
 
         if (isDashing)
         {
@@ -220,13 +238,13 @@ public class Player : MonoBehaviour, IKitchenObjectParent
             dashCooldownRemaining -= Time.deltaTime;
         }
     }
-    private void SetSelectedCounter(ClearCounter clearCounter)
+    private void SetSelectedCounter(BaseCounter selectedCounter)
     {
-        this.selectedCounter = clearCounter;
+        this.selectedCounter = selectedCounter;
         OnSelectedCounterChanged?.Invoke(this, new OnSelectedCounterChangedEventArgs { selectedCounter = selectedCounter });
     }
 
-    public Transform GetJKitchenObjectFollowTransform()
+    public Transform GetKitchenObjectFollowTransform()
     {
         return kitchenObjectHoldPoint;
     }

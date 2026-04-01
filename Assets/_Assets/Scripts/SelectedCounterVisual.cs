@@ -1,4 +1,5 @@
 using Unity.VisualScripting;
+using UnityEditor.Search;
 using UnityEngine;
 
 // Shows a visual indicator on the counter that is currently selected by the player
@@ -6,8 +7,8 @@ using UnityEngine;
 public class SelectedCounterVisual : MonoBehaviour
 {
 
-    [SerializeField] private ClearCounter clearCounter;
-    [SerializeField] private GameObject selectionVisual;
+    [SerializeField] private BaseCounter baseCounter;
+    [SerializeField] private GameObject[] visualGameObjectArray;
 
     private void Start()
     {
@@ -16,15 +17,31 @@ public class SelectedCounterVisual : MonoBehaviour
 
     private void Player_OnSelectedCounterChanged(object sender, Player.OnSelectedCounterChangedEventArgs e)
     {
-        if (e.selectedCounter == clearCounter)
+        if (e.selectedCounter == baseCounter)
         {
-            selectionVisual.SetActive(true);
+            Show();
         }
         else
         {
-            selectionVisual.SetActive(false);
+            Hide();
         }
 
+    }
+
+    private void Show()
+    {
+        foreach (GameObject visualGameObject in visualGameObjectArray)
+        {
+            visualGameObject.SetActive(true);
+        }
+    }
+
+    private void Hide()
+    {
+        foreach (GameObject visualGameObject in visualGameObjectArray)
+        {
+            visualGameObject.SetActive(false);
+        }
     }
 
 }
