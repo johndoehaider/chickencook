@@ -24,3 +24,6 @@ Thumbs.db
 # Unity meta crash
 crashlytics-buildid.txt
 sysinfo.txt
+
+*.slnx
+*.userprefs
